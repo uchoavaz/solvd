@@ -1,7 +1,9 @@
+from botocore.client import ClientError
 from pathlib import Path
 import boto3
 import time
 import json
+import sys
 import os
 
 class DeploySolvDTest():
@@ -14,8 +16,15 @@ class DeploySolvDTest():
         self.url_nested_controller = self.bucket_url + "/controller.yml"
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
+        self.cloudformation_client = boto3.client(
+            'cloudformation',
+            region_name=self.region,
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
 
-    def get_stack_status(self, client):
+    def get_stack_status(self):
+        client = self.cloudformation_client
         completed = False
         rollback_in_progress_check = False
         json_stack_status = {}
@@ -64,12 +73,7 @@ class DeploySolvDTest():
 
     ### This function will create a new stack
     def create_stack(self):
-        client = boto3.client(
-            'cloudformation',
-            region_name=self.region,
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key
-        )
+        client = self.cloudformation_client
         try:
             client.create_stack(
                     StackName=self.stack_name,
@@ -83,11 +87,12 @@ class DeploySolvDTest():
                     Capabilities=['CAPABILITY_NAMED_IAM'],       
             )
         except client.exceptions.AlreadyExistsException as e:
-            self.update_stack(client)
-        self.get_stack_status(client)
+            self.update_stack()
+        self.get_stack_status()
     
     ### This function updates and existing CF stack
-    def update_stack(self,client):
+    def update_stack(self):
+        client = self.cloudformation_client
         client.update_stack(
             StackName=self.stack_name,
             UsePreviousTemplate=False,
@@ -117,6 +122,35 @@ class DeploySolvDTest():
                     local_file_path = os.path.join(root, file_name)
                     client.Bucket(self.s3_bucket).upload_file(local_file_path,file_name)
 
+    ### This function will remove the s3 bucket if it exists and all objects inside
+    def remove_bucket(self):
+        s3 = boto3.resource(
+            's3',
+            region_name=self.region,
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
+
+        try:
+            s3.meta.client.head_bucket(Bucket=self.s3_bucket)
+            bucket = s3.Bucket(self.s3_bucket)
+            bucket.objects.all().delete()
+            bucket.delete()
+
+        except ClientError:
+            pass
+    
+    ### This function will try to destroy the stack if it exists
+    def destroy_stack(self):
+        client = self.cloudformation_client
+        try:
+            client.delete_stack(
+                StackName=self.stack_name 
+            )
+
+            self.get_stack_status()
+        except ClientError as e:
+            pass
 
 ### This function will try to get the Aws credentials from the local env
 def get_aws_credentials():
@@ -134,6 +168,7 @@ def get_aws_credentials():
 
 if __name__ == '__main__':
 
+    action = sys.argv[1]
     stack_name = input("Stack name:\n")
 
     aws_access_key_id, aws_secret_access_key, region = get_aws_credentials()
@@ -145,5 +180,11 @@ if __name__ == '__main__':
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key
     )
-    deploy.upload_cf_files()
-    deploy.create_stack()
+
+    if action == "create":
+        deploy.upload_cf_files()
+        deploy.create_stack()
+
+    elif action == "destroy":
+        deploy.remove_bucket()
+        deploy.destroy_stack()

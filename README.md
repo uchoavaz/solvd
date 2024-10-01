@@ -41,11 +41,18 @@ This project deploys 1 Web page into one ec2 instance and all it dependencies to
  - network.yml(Nested Stack)
      - Contains 1 VPC, 1 public subnet, 1 Internet Gateway and 1 Route table
 
-Deploy
+Creation Deployment
 ------------
-This python script uses Boto3 to interact with AWS. It will push the yml files to an s3 bucket(The script will try to create a new bucket called **solvdtestjoaouchoavaz** if it doesn't exists) and then will execute the main stack **controller.yml**, which will call the nested ones. You only need to run the command bellow and input your stack name.
+It will push the yml files to an s3 bucket(The script will try to create a new bucket called **solvdtestjoaouchoavaz** if it doesn't exists) and then will execute the main stack **controller.yml**, which will call the nested ones. You only need to run the command bellow and input your stack name.
 
-      python3 deploy.py
+      python3 deploy.py create
+
+Destroy Deployment
+------------
+It will remove all the yml files from the s3 bucket(**solvdtestjoaouchoavaz**), remove the bucket and then will destroy the specified stack, which will destroy the nested ones. You only need to run the command bellow and input the stack name you want to destroy.
+
+      python3 deploy.py destroy
+
 
 Outputs
 ------------
@@ -53,6 +60,6 @@ The output Json structure is composed by:
 
     - {"stack_status": <Stack STATUS>, "stack_name": <Stack Name>, "nested_failed_stacks": [{"nested_stack_id": <Failed Nested Stack ID>, "nested_failed_stack_events":[{"nested_stack_status_reason": <Reason Why resource failed to deploy>, "nested_stack_physical_resource_id": <Physical resource id affected>}]}]}
 
-- **nested_failed_stacks** is a list of dictionaries that contains the stack id's of the nested stacks affecteds. This part will only be added if the main stack faces a ROLLBACK Status.
-- **nested_failed_stacks** is another list of dictionaries inside **nested_failed_stacks** that will show the Failed resources inside the nested stack.
+- **nested_failed_stacks** is a list of dictionaries that contains the stack id's of the nested stacks affecteds. This part will only be added if the main stack faces a ROLLBACK status.
+- **nested_failed_stack_events** is another list of dictionaries inside **nested_failed_stacks** that will show the Failed resources inside the nested stack.
 - This output will be updated every 15 seconds.
