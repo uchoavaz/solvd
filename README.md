@@ -16,7 +16,8 @@ the script output should be json formatted.
 # Prerequisites
 
 *  Python v3.11 or higher
-*  boto3
+*  boto3 v1.26.79 or higher
+*  botocore v1.29.79 or higher
 
 Environment Variables
 ------------
@@ -25,7 +26,7 @@ These 3 variables are required, otherwise the script won't work.
 - aws_access_key_id
 - aws_secret_access_key
 
-      export region="<aws region>"
+      export region="<aws region>" (us-east-1, us-east-2 ...)
       export aws_access_key_id="<aws_access_key_id>"
       export aws_secret_access_key="<aws_secret_access_key>"
 
@@ -43,13 +44,13 @@ This project deploys 1 Web page into one ec2 instance and all it dependencies to
 
 Creation Deployment
 ------------
-It will push the yml files to an s3 bucket(The script will try to create a new bucket called **solvdtestjoaouchoavaz** if it doesn't exists) and then will execute the main stack **controller.yml**, which will call the nested ones. You only need to run the command bellow and input your stack name.
+It will push all local yml files to an s3 bucket(The script will try to create a new bucket called **solvdtestjoaouchoavaz** if it doesn't exists) and then will execute the main stack **controller.yml**, which will call the nested ones. You only need to run the command bellow and input your stack name.
 
       python3 deploy.py create
 
 Destroy Deployment
 ------------
-It will remove all the yml files from the s3 bucket(**solvdtestjoaouchoavaz**), remove the bucket and then will destroy the specified stack, which will destroy the nested ones. You only need to run the command bellow and input the stack name you want to destroy.
+It will remove all the files from the s3 bucket(**solvdtestjoaouchoavaz**), remove the bucket and then will destroy the specified stack, which will destroy the nested ones. You only need to run the command bellow and input the stack name you want to destroy.
 
       python3 deploy.py destroy
 
@@ -63,3 +64,8 @@ The output Json structure is composed by:
 - **nested_failed_stacks** is a list of dictionaries that contains the stack id's of the nested stacks affecteds. This part will only be added if the main stack faces a ROLLBACK status.
 - **nested_failed_stack_events** is another list of dictionaries inside **nested_failed_stacks** that will show the Failed resources inside the nested stack.
 - This output will be updated every 15 seconds.
+
+
+Final Considerations
+------------
+If you want to see the app web page you just need to type http://<instance_public_ip>. *instance_public_ip is the public ip of the instance that the cloudformation deployed.

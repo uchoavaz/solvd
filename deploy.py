@@ -22,6 +22,12 @@ class DeploySolvDTest():
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key
         )
+        self.s3_client = boto3.resource(
+            's3',
+            region_name=self.region,
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
 
     def get_stack_status(self):
         client = self.cloudformation_client
@@ -29,17 +35,22 @@ class DeploySolvDTest():
         rollback_in_progress_check = False
         json_stack_status = {}
         while not completed:
+
             response = client.describe_stacks(StackName=self.stack_name)
             response = response['Stacks'][0]['StackStatus']
             json_stack_status['stack_status'] = response
             json_stack_status['stack_name'] = self.stack_name
 
             ### This logic is to make the script stop getting info from the stack because it could reach in the desired state
-            if ('CREATE_COMPLETE' in response or 'UPDATE_COMPLETE' in response or 'UPDATE_ROLLBACK_COMPLETE' in response or 'ROLLBACK_COMPLETE' in response) and 'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS' not in response:
+            if (('CREATE_COMPLETE' in response or 'UPDATE_COMPLETE' in response or 
+                 'UPDATE_ROLLBACK_COMPLETE' in response or 'ROLLBACK_COMPLETE' in response) and 
+                 'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS' not in response):
                 
                 completed = True
 
-            elif ('ROLLBACK_IN_PROGRESS' in response or 'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS' in response or 'UPDATE_ROLLBACK_IN_PROGRESS' in response) and not rollback_in_progress_check:
+            elif (('ROLLBACK_IN_PROGRESS' in response or 
+                   'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS' in response or 
+                   'UPDATE_ROLLBACK_IN_PROGRESS' in response) and not rollback_in_progress_check):
 
                 ### This logic above is to loop all failed creations from the host stack
                 rollback_response = client.describe_stack_events(StackName=self.stack_name)
@@ -57,15 +68,19 @@ class DeploySolvDTest():
                             ### This logic above is to loop all failed creations from the nested stack
                             embedded_events = client.describe_stack_events(StackName=event['PhysicalResourceId'])
                             for embedded_event in embedded_events['StackEvents']:
-                                if 'CREATE_FAILED' in embedded_event['ResourceStatus'] or 'UPDATE_FAILED' in embedded_event['ResourceStatus']:
+                                if ('CREATE_FAILED' in embedded_event['ResourceStatus'] or 
+                                    'UPDATE_FAILED' in embedded_event['ResourceStatus']):
                                     if 'The following resource' not in embedded_event['ResourceStatusReason']:
                                         index = len(json_stack_status['nested_failed_stacks']) - 1
                                         nested_stack_events_dict = {
                                                 'nested_stack_status_reason': embedded_event['ResourceStatusReason'],
                                                 'nested_stack_physical_resource_id': embedded_event['PhysicalResourceId']
                                             }
-                                        if nested_stack_events_dict not in json_stack_status['nested_failed_stacks'][index]['nested_failed_stack_events']:
-                                            json_stack_status['nested_failed_stacks'][index]['nested_failed_stack_events'].append(nested_stack_events_dict)
+                                        if (nested_stack_events_dict not in 
+                                            json_stack_status['nested_failed_stacks'][index]['nested_failed_stack_events']):
+                                            json_stack_status['nested_failed_stacks'][index]['nested_failed_stack_events'].append(
+                                                nested_stack_events_dict
+                                            )
                 rollback_in_progress_check = True
 
             print("\n" + json.dumps(json_stack_status))
@@ -108,12 +123,7 @@ class DeploySolvDTest():
 
     ### Upload Cloudformation Files to the specified Bucket
     def upload_cf_files(self):
-        client = boto3.resource(
-            's3',
-            region_name=self.region,
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key
-        )
+        client = self.s3_client
         client.create_bucket(Bucket=self.s3_bucket) ### This function creates the bucket if it doesn't exists.
         directory_path = Path().resolve()
         for root, dirs, files in os.walk(directory_path):
@@ -124,12 +134,7 @@ class DeploySolvDTest():
 
     ### This function will remove the s3 bucket if it exists and all objects inside
     def remove_bucket(self):
-        s3 = boto3.resource(
-            's3',
-            region_name=self.region,
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key
-        )
+        s3 = self.s3_client
 
         try:
             s3.meta.client.head_bucket(Bucket=self.s3_bucket)
@@ -173,6 +178,7 @@ if __name__ == '__main__':
 
     aws_access_key_id, aws_secret_access_key, region = get_aws_credentials()
 
+    ### Create deploy object
     deploy = DeploySolvDTest(
         region=region,
         stack_name=stack_name,
@@ -181,6 +187,7 @@ if __name__ == '__main__':
         aws_secret_access_key=aws_secret_access_key
     )
 
+    ### Condition for create and destroy functions
     if action == "create":
         deploy.upload_cf_files()
         deploy.create_stack()
