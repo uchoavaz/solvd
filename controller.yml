@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+
+  App:
+    Type: String
+    Description: Name of Application for identification.
+    AllowedPattern: '[A-Za-z0-9]{2,15}'
+    ConstraintDescription: App may only contain uppercase or lowercase letters and numbers and must be betweeen 2 and 15 characters
+    Default: solvdTest
+
+  StackUrl:
+    Type: String
+
+Resources:
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        App: !Ref App
+      Tags:
+        - Key: App
+          Value: !Ref App
+      TemplateURL: !Sub "${StackUrl}/network.yml"
+
+  AppStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        App: !Ref App
+        Vpc:
+          Fn::GetAtt:
+            - NetworkStack
+            - Outputs.VPC
+        PublicSubnet1:
+          Fn::GetAtt:
+            - NetworkStack
+            - Outputs.PublicSubnet1
+      Tags:
+        - Key: App
+          Value: !Ref App
+      TemplateURL: !Sub "${StackUrl}/app.yml"
+    DependsOn:
+      - NetworkStack
