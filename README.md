@@ -55,3 +55,4 @@ The output Json structure is composed by:
 
 - **nested_failed_stacks** is a list of dictionaries that contains the stack id's of the nested stacks affecteds. This part will only be added if the main stack faces a ROLLBACK Status.
 - **nested_failed_stacks** is another list of dictionaries inside **nested_failed_stacks** that will show the Failed resources inside the nested stack.
+- This output will be updated every 15 seconds.
