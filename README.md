@@ -59,7 +59,7 @@ Outputs
 ------------
 The output Json structure is composed by:
 
-    - {"stack_status": <Stack STATUS>, "stack_name": <Stack Name>, "nested_failed_stacks": [{"nested_stack_id": <Failed Nested Stack ID>, "nested_failed_stack_events":[{"nested_stack_status_reason": <Reason Why resource failed to deploy>, "nested_stack_physical_resource_id": <Physical resource id affected>}]}]}
+    - {"stack_status": <Stack STATUS>, "stack_name": <Stack Name>, "nested_failed_stacks": [{"nested_stack_id": <Failed Nested Stack ID>, "nested_failed_stack_events":[{"nested_stack_status_reason": <Reason Why resource failed to deploy>, "nested_stack_logical_resource_id": <Stack logical resource id affected>}]}]}
 
 - **nested_failed_stacks** is a list of dictionaries that contains the stack id's of the nested stacks affecteds. This part will only be added if the main stack faces a ROLLBACK status.
 - **nested_failed_stack_events** is another list of dictionaries inside **nested_failed_stacks** that will show the Failed resources inside the nested stack.
@@ -67,11 +67,11 @@ The output Json structure is composed by:
 
 Force a ROLLBACK
 -------------
-You can force a failure in the deployment change some current value to a wronge one. Like for example you can change this [CIDR](https://github.com/uchoavaz/solvd/blob/main/app.yml#L26) from the security group to 0.0.0.0.0/0 and run:
+You can force a failure in the deployment change some current value to a wronge one.For example, you can change this [CIDR](https://github.com/uchoavaz/solvd/blob/main/app.yml#L26) from the security group to 0.0.0.0.0/0 and run:
 
       python3 deploy.py create
 
-It will cause a failure in the deployment and then a ROLLBACK in the stack.
+It will cause a failure in the deployment, a ROLLBACK status in the stack and then you will be able to see the complete json structure.
 
 Final Considerations
 ------------
