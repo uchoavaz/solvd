@@ -64,7 +64,7 @@ class DeploySolvDTest():
                             if 'Embedded' in event['ResourceStatusReason']:
                                 nested_stacks_list.append(event['LogicalResourceId'])
                                 reason = event['ResourceStatusReason']
-                                failed_resources = reason[reason.find("[")+1:reason.find("]")]
+                                failed_resources = reason[reason.find("[")+1:reason.find("]")].split(',')
                                 json_stack_status['nested_failed_stacks'].append(
                                     {
                                         'nested_stack_id': event['PhysicalResourceId'],
