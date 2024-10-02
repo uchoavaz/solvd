@@ -40,6 +40,8 @@ class DeploySolvDTest():
             response = response['Stacks'][0]['StackStatus']
             json_stack_status['stack_status'] = response
             json_stack_status['stack_name'] = self.stack_name
+            json_stack_status['nested_failed_stacks'] = []
+
 
             ### This logic is to make the script stop getting info from the stack because it could reach in the desired state
             if (('CREATE_COMPLETE' in response or 'UPDATE_COMPLETE' in response or 
@@ -56,7 +58,6 @@ class DeploySolvDTest():
                 rollback_response = client.describe_stack_events(StackName=self.stack_name)
                 for event in rollback_response['StackEvents']:
                     if 'CREATE_FAILED' in event['ResourceStatus'] or 'UPDATE_FAILED' in event['ResourceStatus']:
-                        json_stack_status['nested_failed_stacks'] = []
                         if 'Embedded' in event['ResourceStatusReason']:
                             json_stack_status['nested_failed_stacks'].append(
                                 {
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     deploy = DeploySolvDTest(
         region=region,
         stack_name=stack_name,
-        s3_bucket="solvdtestjoaouchoavaz",
+        s3_bucket="solvdtestjoaovictoruchoavaz",
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key
     )

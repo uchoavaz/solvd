@@ -44,13 +44,13 @@ This project deploys 1 Web page into one ec2 instance and all it dependencies to
 
 Creation Deployment
 ------------
-It will push all local yml files to an s3 bucket(The script will try to create a new bucket called **solvdtestjoaouchoavaz** if it doesn't exists) and then will execute the main stack **controller.yml**, which will call the nested ones. You only need to run the command bellow and input your stack name.
+It will push all local yml files to an s3 bucket(The script will try to create a new bucket called **solvdtestjoaovictoruchoavaz** if it doesn't exists) and then will execute the main stack **controller.yml**, which will call the nested ones. You only need to run the command bellow and input your stack name.
 
       python3 deploy.py create
 
 Destroy Deployment
 ------------
-It will remove all the files from the s3 bucket(**solvdtestjoaouchoavaz**), remove the bucket and then will destroy the specified stack, which will destroy the nested ones. You only need to run the command bellow and input the stack name you want to destroy.
+It will remove all the files from the s3 bucket(**solvdtestjoaouvictorchoavaz**), remove the bucket and then will destroy the specified stack, which will destroy the nested ones. You only need to run the command bellow and input the stack name you want to destroy.
 
       python3 deploy.py destroy
 
