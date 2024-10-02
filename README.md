@@ -65,6 +65,13 @@ The output Json structure is composed by:
 - **nested_failed_stack_events** is another list of dictionaries inside **nested_failed_stacks** that will show the Failed resources inside the nested stack.
 - This output will be updated every 15 seconds.
 
+Force a ROLLBACK
+-------------
+You can force a failure in the deployment change some current value to a wronge one. Like for example you can change this [CIDR](https://github.com/uchoavaz/solvd/blob/main/app.yml#L26) from the security group to 0.0.0.0.0/0 and run:
+
+      python3 deploy.py create
+
+It will cause a failure in the deployment and then a ROLLBACK in the stack.
 
 Final Considerations
 ------------
