@@ -60,32 +60,29 @@ class DeploySolvDTest():
                 for event in rollback_response['StackEvents']:
                     if 'CREATE_FAILED' in event['ResourceStatus'] or 'UPDATE_FAILED' in event['ResourceStatus']:
                         if event['LogicalResourceId'] not in nested_stacks_list:
-                            json_stack_status['nested_failed_stacks'] = []
                             if 'Embedded' in event['ResourceStatusReason']:
                                 nested_stacks_list.append(event['LogicalResourceId'])
                                 reason = event['ResourceStatusReason']
                                 failed_resources = reason[reason.find("[")+1:reason.find("]")].split(',')
-                                json_stack_status['nested_failed_stacks'].append(
-                                    {
-                                        'nested_stack_id': event['PhysicalResourceId'],
-                                        'nested_failed_stack_events': []
-                                    }
-                                )
+                                json_stack_status['nested_stack_id'] = event['PhysicalResourceId']
+                                json_stack_status['nested_failed_stack_events'] = []
+
                                 ### This logic above is to loop all failed creations from the nested stack
                                 embedded_events = client.describe_stack_events(StackName=event['PhysicalResourceId'])
                                 for embedded_event in embedded_events['StackEvents']:
                                     if ('CREATE_FAILED' in embedded_event['ResourceStatus'] or 
                                         'UPDATE_FAILED' in embedded_event['ResourceStatus']):
                                         if 'The following resource' not in embedded_event['ResourceStatusReason']:
-                                            index = len(json_stack_status['nested_failed_stacks']) - 1
+
                                             if embedded_event['LogicalResourceId'] in failed_resources:
                                                 failed_resources = [x for x in failed_resources if embedded_event['LogicalResourceId'] not in x]
                                                 nested_stack_events_dict = {
                                                         'nested_stack_status_reason': embedded_event['ResourceStatusReason'],
                                                         'nested_stack_logical_resource_id': embedded_event['LogicalResourceId']
                                                     }
-                                                json_stack_status['nested_failed_stacks'][index]['nested_failed_stack_events'].append(
+                                                json_stack_status['nested_failed_stack_events'].append(
                                                     nested_stack_events_dict)
+                                break                    
                 rollback_in_progress_check = True
 
             print("\n" + json.dumps(json_stack_status))
