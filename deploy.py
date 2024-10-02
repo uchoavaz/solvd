@@ -40,7 +40,6 @@ class DeploySolvDTest():
             response = response['Stacks'][0]['StackStatus']
             json_stack_status['stack_status'] = response
             json_stack_status['stack_name'] = self.stack_name
-            json_stack_status['nested_failed_stacks'] = []
 
 
             ### This logic is to make the script stop getting info from the stack because it could reach in the desired state
